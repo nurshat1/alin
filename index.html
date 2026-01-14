@@ -2,7 +2,7 @@
 <html lang="ru">
 <head>
   <meta charset="UTF-8">
-  <title>Мой сайт</title>
+  <title>Свадьба</title>
 
   <style>
     html, body {
@@ -11,7 +11,8 @@
       width: 100%;
       height: 100%;
       overflow: hidden;
-      background: black;
+      background: radial-gradient(circle at top, #3b0a15, #0b0204);
+      font-family: "Georgia", serif;
     }
 
     canvas {
@@ -22,55 +23,63 @@
 
     .content {
       position: relative;
-      z-index: 2;
+      z-index: 3;
       height: 100vh;
       display: flex;
       justify-content: center;
       align-items: center;
+      animation: fadeIn 3s ease forwards;
     }
 
     img {
-      max-width: 80%;
-      max-height: 80%;
-      border-radius: 20px;
-      box-shadow: 0 0 40px rgba(255,255,255,0.6);
+      max-width: 75%;
+      max-height: 75%;
+      border-radius: 24px;
+      box-shadow:
+        0 0 30px rgba(255, 215, 150, 0.5),
+        0 0 80px rgba(255, 180, 100, 0.3);
     }
 
     .hint {
       position: fixed;
-      bottom: 20px;
+      bottom: 24px;
       width: 100%;
       text-align: center;
-      color: white;
-      font-family: sans-serif;
-      opacity: 0.7;
-      z-index: 3;
+      color: #f5d7a1;
+      opacity: 0.8;
+      font-size: 14px;
+      z-index: 4;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: scale(0.95); }
+      to   { opacity: 1; transform: scale(1); }
     }
   </style>
 </head>
 <body>
 
-<canvas id="sparkles"></canvas>
+<canvas id="bg"></canvas>
 
 <div class="content">
-  <img src="image.png" alt="Картинка">
+  <img src="image.png" alt="Свадьба">
 </div>
 
-<div class="hint">Нажми в любом месте ✨</div>
+<div class="hint">Нажмите, чтобы заиграла музыка 💛</div>
 
 <audio id="music" loop>
   <source src="music.mp3" type="audio/mpeg">
 </audio>
 
 <script>
-  // --- Музыка ---
+  // --- музыка ---
   const music = document.getElementById("music");
   document.addEventListener("click", () => {
     music.play();
   }, { once: true });
 
-  // --- Искры ---
-  const canvas = document.getElementById("sparkles");
+  // --- фон ---
+  const canvas = document.getElementById("bg");
   const ctx = canvas.getContext("2d");
 
   function resize() {
@@ -80,34 +89,55 @@
   resize();
   addEventListener("resize", resize);
 
-  const sparks = Array.from({ length: 120 }, () => ({
-    x: Math.random() * canvas.width,
-    y: Math.random() * canvas.height,
-    r: Math.random() * 2 + 1,
-    dx: (Math.random() - 0.5) * 0.6,
-    dy: (Math.random() - 0.5) * 0.6
-  }));
-
-  function draw() {
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    sparks.forEach(s => {
-      ctx.beginPath();
-      ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2);
-      ctx.fillStyle = "rgba(255,255,255,0.8)";
-      ctx.shadowBlur = 10;
-      ctx.shadowColor = "white";
-      ctx.fill();
-
-      s.x += s.dx;
-      s.y += s.dy;
-
-      if (s.x < 0 || s.x > canvas.width) s.dx *= -1;
-      if (s.y < 0 || s.y > canvas.height) s.dy *= -1;
+  const particles = [];
+  for (let i = 0; i < 140; i++) {
+    particles.push({
+      x: Math.random() * canvas.width,
+      y: Math.random() * canvas.height,
+      r: Math.random() * 2 + 1,
+      dy: Math.random() * 0.4 + 0.2,
+      type: Math.random() > 0.75 ? "heart" : "spark"
     });
-    requestAnimationFrame(draw);
   }
 
-  draw();
+  function drawHeart(x, y, s) {
+    ctx.beginPath();
+    ctx.moveTo(x, y);
+    ctx.bezierCurveTo(x - s, y - s, x - s * 2, y + s, x, y + s * 2);
+    ctx.bezierCurveTo(x + s * 2, y + s, x + s, y - s, x, y);
+    ctx.fill();
+  }
+
+  function animate() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    particles.forEach(p => {
+      ctx.fillStyle = p.type === "heart"
+        ? "rgba(255,150,170,0.7)"
+        : "rgba(255,215,140,0.8)";
+
+      ctx.shadowBlur = 12;
+      ctx.shadowColor = ctx.fillStyle;
+
+      if (p.type === "heart") {
+        drawHeart(p.x, p.y, p.r * 2);
+      } else {
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+        ctx.fill();
+      }
+
+      p.y += p.dy;
+      if (p.y > canvas.height) {
+        p.y = -10;
+        p.x = Math.random() * canvas.width;
+      }
+    });
+
+    requestAnimationFrame(animate);
+  }
+
+  animate();
 </script>
 
 </body>
